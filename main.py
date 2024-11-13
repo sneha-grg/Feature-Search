@@ -44,6 +44,47 @@ def forward_selection(features):
     
     return feature_set
 
+def back_elimination(new_list, values=None, current_max=-float('inf')):
+
+    if values is None:
+        values = []
+
+    #base case, gets to last level
+    if len(new_list) <= 1:
+        return max(new_list)
+
+    current_list = []
+    max_val = -float('inf')
+    greatest_index = 0
+
+    for i in range(len(new_list)):
+        updated_list = new_list.copy()
+        updated_list.pop(i)
+        current_list.append(updated_list)
+        scores = evaluation_function(updated_list)
+        print(f"Using feature(s) {set(updated_list)} accuracy is {scores:.1f}%")
+
+
+        if scores > max_val:
+            max_val = scores
+            greatest_index = i
+
+
+
+    best_list = current_list[greatest_index]
+    print(f"\nFeature set {set(best_list)} was best, accuracy is {max_val:.1f}%\n")
+
+    #if new max val is an improvement, otherwise stop
+    if max_val > current_max:
+        values.append((best_list, max_val))
+        current_max = max_val
+    else:
+        print("(Warning, Accuracy has decreased!)\n")
+        print("Finished search!! The best feature subset is", set(values[-1][0]), f"which has an accuracy of {values[-1][1]:.1f}%\n")
+        return values[-1][0]
+
+
+    return back_elimination(best_list, values, current_max)
 
     
 def main():
@@ -67,6 +108,10 @@ def main():
 
     if num_of_algo == '1':
         forward_selection(myset)
+
+    if num_of_algo == '2':
+        print("Beginning Search.\n")
+        back_elimination(myset)
     else:
         print("Code not implemented yet.") # add backward elimination function
 
