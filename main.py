@@ -64,7 +64,6 @@ def main():
     myset = []
     for i in range(1, num_of_features + 1):
         myset.append(i)
-        print(i)
 
     if num_of_algo == '1':
         forward_selection(myset)
