@@ -1,7 +1,7 @@
 import random
 
 def evaluation_function(feature_subset): # feature subset is a node in a graph
-    return random.uniform(0, 100)
+    return random.uniform(0.0, 100.0)
 
 def forward_selection(features):
     feature_set = []
@@ -28,6 +28,7 @@ def forward_selection(features):
 
         # stop search if adding a feature doesn't improve the score
         if best_feature is not None:
+            # append for add and pop for remove
             feature_set.append(best_feature)
             if best_feature_score > best_overall_score:
                 best_overall_score = best_feature_score
@@ -40,11 +41,6 @@ def forward_selection(features):
             break
 
     print(f"\nFinished search!! The best feature subset is {hold_overall_set}, which has an accuracry of {best_overall_score:.1f}%")
-
-        # append for add and pop for remove
-        # feature_set.append(best_feature)
-        # print("Current set: ", feature_set)
-        # print("Best Score: ", best_feature_score)
     
     return feature_set
 
