@@ -20,7 +20,7 @@ def forward_selection(features):
                 new_set = feature_set + [f] # 
                 score = evaluation_function(new_set) # random score using evaluation function
 
-                print(f"\t Using feature(s) {new_set} accuracy is {score:.1f}%")
+                print(f"\t Using feature(s) {set(new_set)} accuracy is {score:.1f}%")
 
                 if score > best_feature_score:
                     best_feature_score = score
@@ -33,14 +33,14 @@ def forward_selection(features):
             if best_feature_score > best_overall_score:
                 best_overall_score = best_feature_score
                 hold_overall_set = feature_set.copy()
-                print(f"\nFeature set {feature_set} was best, accuracry is {best_feature_score:.1f}%")
+                print(f"\nFeature set {set(feature_set)} was best, accuracry is {best_feature_score:.1f}%")
             elif best_feature_score < best_overall_score:
                 print("\n(Warning, Accuracy was decreased !)")
                 break
         else:
             break
 
-    print(f"\nFinished search!! The best feature subset is {hold_overall_set}, which has an accuracry of {best_overall_score:.1f}%")
+    print(f"\nFinished search!! The best feature subset is {hold_overall_set}, which has an accuracry of {best_overall_score:.1f}%\n")
     
     return feature_set
 
@@ -109,7 +109,7 @@ def main():
     if num_of_algo == '1':
         forward_selection(myset)
 
-    if num_of_algo == '2':
+    elif num_of_algo == '2':
         print("Beginning Search.\n")
         back_elimination(myset)
     else:
