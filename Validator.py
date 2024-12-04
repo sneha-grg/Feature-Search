@@ -1,6 +1,8 @@
 class Validator:
     def __init__(self, feature_subset, classifier, dataset):
-        pass
+        self.feature_set = feature_subset
+        self.classifier = classifier # NN classifier
+        self.dataset = dataset # all the training data 
 
     def calculate_classifier_accuracry(self, feature_subset):
         pass
