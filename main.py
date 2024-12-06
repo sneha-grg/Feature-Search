@@ -1,11 +1,18 @@
-import random
+from DataHandler import load_data, normalize_data
+from Classifier import NNClassifier
+from Validator import Validator
+import time
 
-def evaluation_function(feature_subset): # feature subset is a node in a graph
-    return random.uniform(0.0, 100.0)
+def evaluation_function(feature_subset, data):
+    # this is where we call the Validator that evaluates the accuracy of the NN classifier
+    classifier = NNClassifier()
+    validator = Validator(classifier, data, feature_subset)
+    accuracy = validator.calculate_classifier_accuracy()
+    return accuracy * 100  # Convert to percentage
 
-def forward_selection(features):
+def forward_selection(features, data):
     feature_set = []
-    best_overall_score = evaluation_function(feature_set)
+    best_overall_score = 0.0
     hold_overall_set = []
     print("Beginning Search.\n")
 
@@ -17,10 +24,10 @@ def forward_selection(features):
         # testing each feature that has not been selected
         for f in features:
             if f not in feature_set:
-                new_set = feature_set + [f] # 
-                score = evaluation_function(new_set) # random score using evaluation function
+                new_set = feature_set + [f]
+                score = evaluation_function(new_set, data) # evaluation function calls Validator class now
 
-                print(f"\t Using feature(s) {set(new_set)} accuracy is {score:.1f}%")
+                print(f"\tUsing feature(s) {set(new_set)} accuracy is {score:.1f}%")
 
                 if score > best_feature_score:
                     best_feature_score = score
@@ -33,88 +40,100 @@ def forward_selection(features):
             if best_feature_score > best_overall_score:
                 best_overall_score = best_feature_score
                 hold_overall_set = feature_set.copy()
-                print(f"\nFeature set {set(feature_set)} was best, accuracry is {best_feature_score:.1f}%")
+                print(f"\nFeature set {set(feature_set)} was best, accuracy is {best_feature_score:.1f}%")
             elif best_feature_score < best_overall_score:
                 print("\n(Warning, Accuracy was decreased !)")
                 break
         else:
             break
 
-    print(f"\nFinished search!! The best feature subset is {hold_overall_set}, which has an accuracry of {best_overall_score:.1f}%\n")
-    
-    return feature_set
-
-def back_elimination(new_list, values=None, current_max=-float('inf')):
-
-    if values is None:
-        values = []
-
-    #base case, gets to last level
-    if len(new_list) <= 1:
-        return max(new_list)
-
-    current_list = []
-    max_val = -float('inf')
-    greatest_index = 0
-
-    for i in range(len(new_list)):
-        updated_list = new_list.copy()
-        updated_list.pop(i)
-        current_list.append(updated_list)
-        scores = evaluation_function(updated_list)
-        print(f"Using feature(s) {set(updated_list)} accuracy is {scores:.1f}%")
+    print(f"\nFinished search!! The best feature subset is {set(hold_overall_set)}, which has an accuracy of {best_overall_score:.1f}%\n")
+    return hold_overall_set
 
 
-        if scores > max_val:
-            max_val = scores
-            greatest_index = i
+def back_elimination(features, data):
+    feature_set = features.copy()
+    best_overall_score = evaluation_function(feature_set, data)
+    hold_overall_set = feature_set.copy()
+    print("Beginning Search.\n")
+    print(f"Initial feature set {set(hold_overall_set)} has an accuracy of {best_overall_score:.1f}%\n")
+
+    # loop until no more features
+    while len(feature_set) > 0:
+        #tracks the subset with the highest accuracy
+        feature_to_remove = None
+        best_score = -float('inf')
+        best_subset = None
+
+        # iterate over current subset
+        for f in feature_set:
+            subset = feature_set.copy()
+            subset.remove(f)
+            score = evaluation_function(subset, data)
+            print(f"\tUsing feature(s) {set(subset)} accuracy is {score:.1f}%")
+
+            #keeps track of the best_score of current subset
+            if score > best_score:
+                best_score = score
+                feature_to_remove = f
+                best_subset = subset.copy()
+
+         # if the best score from current iteration is better than the overal best_overall_score
+        if best_score > best_overall_score:
+            #update best_overall_score
+            best_overall_score = best_score
+            feature_set.remove(feature_to_remove)
+            hold_overall_set = best_subset.copy()
+            print(f"\nFeature set {set(hold_overall_set)} was best, accuracy is {best_overall_score:.1f}%\n")
+        else:
+            # no improvement from current iteration, means algo should stop here
+            print("\n(Warning, Accuracy has decreased! Stopping elimination.)\n")
+            break
+
+    print(f"Finished search!! The best feature subset is {set(hold_overall_set)}, which has an accuracy of {best_overall_score:.1f}%\n")
+    return hold_overall_set
 
 
-
-    best_list = current_list[greatest_index]
-    print(f"\nFeature set {set(best_list)} was best, accuracy is {max_val:.1f}%\n")
-
-    #if new max val is an improvement, otherwise stop
-    if max_val > current_max:
-        values.append((best_list, max_val))
-        current_max = max_val
-    else:
-        print("(Warning, Accuracy has decreased!)\n")
-        print("Finished search!! The best feature subset is", set(values[-1][0]), f"which has an accuracy of {values[-1][1]:.1f}%\n")
-        return values[-1][0]
-
-
-    return back_elimination(best_list, values, current_max)
-
-    
 def main():
     print("Welcome to Sneha's and Anna's Feature Selection Algorithm.\n")
     num_of_features = int(input("Please enter total number of features: "))
     print("\n")
-    print("Type the number of alogorithm you want to run.\n")
-    
-    print("\t 1. Forward Selection")
-    print("\t 2. Backward Elimination")
-    print("\t 3. Our Special Alogirthm \n\n")
+    print("Type the number of algorithm you want to run.\n")
 
-    num_of_algo = input("\t\t\t\t\t\t\t\t") # lol
+    print("\t1. Forward Selection")
+    print("\t2. Backward Elimination")
+    print("\t3. Our Special Algorithm \n\n")
 
-    base_accuracy = evaluation_function([])
-    print(f"\nUsing no features and 'random' evaluation, I get an accuracy of {base_accuracy:.1f} %\n")
+    num_of_algo = input("\t\t\t\t\t\t\t\t")  # lol
 
+    # Load and normalize data
+    filename = int(input("Please enter 1 for small-test-dataset.txt and 2 for large-test-dataset.txt: "))
+    if filename == 1:
+        data = load_data('small-test-dataset.txt')
+        data = normalize_data(data)
+    elif filename == 2:
+        data = load_data('large-test-dataset.txt')
+        data = normalize_data(data)
+
+    print(f"\nLoaded and normalized data from {filename}.\n")
+
+    # Initialize the evaluation with no features
     myset = []
     for i in range(1, num_of_features + 1):
         myset.append(i)
 
+    start_time = time.time()
+
     if num_of_algo == '1':
-        forward_selection(myset)
-
+        forward_selection(myset, data)
     elif num_of_algo == '2':
-        print("Beginning Search.\n")
-        back_elimination(myset)
+        back_elimination(myset, data)
     else:
-        print("Code not implemented yet.") # add backward elimination function
+        print("Code not implemented yet.")
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Search completed in {elapsed_time:.2f} seconds.")
 
 if __name__ == "__main__":
     main()
