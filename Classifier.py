@@ -1,3 +1,4 @@
+
 class NNClassifier:
     # Constructor
     def __init__(self):

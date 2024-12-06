@@ -44,3 +44,6 @@ def normalize_data(data):
         normalized_data.append((class_label, normalized_features))
 
     return normalized_data # all features are either 0 or 1
+
+
+
