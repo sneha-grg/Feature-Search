@@ -1,7 +1,7 @@
 from DataHandler import load_data, normalize_data
 from Classifier import NNClassifier
 from Validator import Validator
-import time
+import time, random
 
 def evaluation_function(feature_subset, data):
     # this is where we call the Validator that evaluates the accuracy of the NN classifier
@@ -95,45 +95,116 @@ def back_elimination(features, data):
 
 
 def main():
-    print("Welcome to Sneha's and Anna's Feature Selection Algorithm.\n")
-    num_of_features = int(input("Please enter total number of features: "))
-    print("\n")
-    print("Type the number of algorithm you want to run.\n")
+    print("Welcome to the Feature Selection and Testing Algorithm.\n")
+    start_time = time.time()
 
-    print("\t1. Forward Selection")
-    print("\t2. Backward Elimination")
-    print("\t3. Our Special Algorithm \n\n")
+    # two choices of data sets
+    print("Please Select Which Dataset to Use: (Input number)")
+    print("1. Small Dataset")
+    print("2. Large Dataset")
+    filename = int(input("Choice: "))
 
-    num_of_algo = input("\t\t\t\t\t\t\t\t")  # lol
-
-    # Load and normalize data
-    filename = int(input("Please enter 1 for small-test-dataset.txt and 2 for large-test-dataset.txt: "))
     if filename == 1:
+        parse_dataset_start = time.time()
         data = load_data('small-test-dataset.txt')
+        parse_dataset_end = time.time()
+        normalization_start = time.time()
         data = normalize_data(data)
+        normalization_end = time.time()
+        print("Run through entire dataset or one given feature?") # gives options to run all data set or one feature
+        print("1. Entire dataset")
+        print("2. Feature {3, 5, 7}")
+        feature_choice = input("Choice: ")
+        if feature_choice == "2":
+            feature_subset = [3, 5, 7]  # Use features 3, 5, and 7
+        else:
+            feature_subset = list(range(1, len(data[0][1]) + 1))  # Use all features
     elif filename == 2:
+        parse_dataset_start = time.time()
         data = load_data('large-test-dataset.txt')
+        parse_dataset_end = time.time()
+        normalization_start = time.time()
         data = normalize_data(data)
+        normalization_end = time.time()
+        print("Run through entire dataset or one given feature?") # gives options to run all data set or one feature
+        print("1. Entire dataset")
+        print("2. Feature {1, 15, 27}")
+        feature_choice = input("Choice: ")
+        if feature_choice == "2":
+            feature_subset = [1, 15, 27]
+        else:
+            feature_subset = list(range(1, len(data[0][1]) + 1))  # Use all features
 
     print(f"\nLoaded and normalized data from {filename}.\n")
 
-    # Initialize the evaluation with no features
-    myset = []
-    for i in range(1, num_of_features + 1):
-        myset.append(i)
+    validation_start = time.time()
 
-    start_time = time.time()
+    classifier = NNClassifier()
+    validator = Validator(classifier, data, feature_subset)
+    # calculate accuracy
+    accuracy = validator.calculate_classifier_accuracy()
+    
+    print("\nProcessing Leave-One-Out Validation...\n")
+    results = []
+    correct = 0
 
-    if num_of_algo == '1':
-        forward_selection(myset, data)
-    elif num_of_algo == '2':
-        back_elimination(myset, data)
-    else:
-        print("Code not implemented yet.")
+    for i in range(len(data)):
+        actual_label = data[i][0]
+        feature_vector = data[i][1]
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Search completed in {elapsed_time:.2f} seconds.")
+        # test_features
+        test_features = []
+        for f in feature_subset:
+            test_features.append(feature_vector[f - 1])
+
+        # training data without test instance
+        training_data = []
+        for j in range(len(data)):
+            if j != i:  # add everything except test instance
+                training_data.append(data[j])
+
+        # labels and features
+        training_labels = []
+        training_features = []
+        for instance in training_data:
+            training_labels.append(instance[0]) #add labels
+            features = []
+            for f in feature_subset:
+                features.append(instance[1][f - 1])   #add features
+            training_features.append(features)
+
+        #train classifier
+        classifier.Train(training_features, training_labels)
+
+        #prediction of classifier
+        predicted_label = classifier.Test(test_features)
+
+        # check if prediction is right
+        is_correct = predicted_label == actual_label
+        if is_correct:
+            correct += 1
+
+        # append to results array
+        results.append((i + 1, predicted_label, actual_label, is_correct))
+
+    validation_end = time.time()
+    # formating the output of our code
+    print("\nResults:\n")
+    for instance_id, predicted, actual, is_correct in results:
+        correctness = "correct" if is_correct else "wrong"
+        print(
+            f"Instance:{instance_id:3d}, Predicted: {predicted:1d}, Actual: {actual:1d} ({correctness})"
+        )
+
+    print(f"\nResults: {correct} / {len(data)}")
+    print(f"Accuracy: {accuracy * 100:.1f}%\n")
+
+    # Calculate and display timings
+    print("\nTime Spent on Each Step:")
+    print(f"Dataset Parsing: {parse_dataset_end - parse_dataset_start:.4f} seconds")
+    print(f"Normalization: {normalization_end - normalization_start:.4f} seconds")
+    print(f"Leave-One-Out Validation: {validation_end - validation_start:.4f} seconds")
+    print(f"Total Time: {time.time() - start_time:.4f} seconds\n")
 
 if __name__ == "__main__":
     main()
