@@ -141,6 +141,21 @@ def main():
     else:
         print("Code not implemented yet.")
 
+    """
+    - Group: Sneha Gurung - sguru004 - Session 23, Anna Lee - alee531 - Session 23
+    - DatasetID: the best feature output
+    - Small Dataset Results:
+            - Forward: Feature Subset: {3, 5}, Acc: 92%
+            - Backward: Feature Subset: {2, 3, 4, 5}, Acc: 83%
+    - Large Dataset Results:
+            - Forward: Feature Subset: {1, 27}, Acc: 95.5%
+            - Backward: Feature Subset: {1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 
+            33, 34, 35, 36, 37, 38, 39, 40}, Acc:71.1%
+    - Titanic Dataset Results:
+            - Forward: Feature Subset: {2}, Acc: 78%
+            - Backward: Feature Subset: {2}, Acc: 78%
+    """
 
 
 if __name__ == "__main__":
