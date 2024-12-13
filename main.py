@@ -1,7 +1,7 @@
 from DataHandler import load_data, normalize_data
 from Classifier import NNClassifier
 from Validator import Validator
-import time
+
 
 def evaluation_function(feature_subset, data):
     # this is where we call the Validator that evaluates the accuracy of the NN classifier
@@ -96,7 +96,22 @@ def back_elimination(features, data):
 
 def main():
     print("Welcome to Sneha's and Anna's Feature Selection Algorithm.\n")
-    num_of_features = int(input("Please enter total number of features: "))
+    
+    # Load and normalize data
+    filename = int(input("Please enter 1 for small-test-dataset.txt, 2 for large-test-dataset.txt, and 3 for titanic-clean.txt: "))
+    if filename == 1:
+        data = load_data('small-test-dataset.txt')
+        data = normalize_data(data)
+    elif filename == 2:
+        data = load_data('large-test-dataset.txt')
+        data = normalize_data(data)
+    elif filename == 3:
+        data = load_data('titanic-clean.txt')
+        data = normalize_data(data)
+    else:
+        print("Invalid input. Exiting.")
+        return
+
     print("\n")
     print("Type the number of algorithm you want to run.\n")
 
@@ -106,34 +121,27 @@ def main():
 
     num_of_algo = input("\t\t\t\t\t\t\t\t")  # lol
 
-    # Load and normalize data
-    filename = int(input("Please enter 1 for small-test-dataset.txt and 2 for large-test-dataset.txt: "))
-    if filename == 1:
-        data = load_data('small-test-dataset.txt')
-        data = normalize_data(data)
-    elif filename == 2:
-        data = load_data('large-test-dataset.txt')
-        data = normalize_data(data)
+    num_features = len(data[0][1])
+    instances = len(data)
+    print(f"\nThis dataset has {num_features} features (not including the class attribute), with {instances} instances\n")
 
-    print(f"\nLoaded and normalized data from {filename}.\n")
+    print("Please wait while I normalize the data... Done!\n")
 
-    # Initialize the evaluation with no features
-    myset = []
-    for i in range(1, num_of_features + 1):
-        myset.append(i)
+    feature_subset = list(range(1, len(data[0][1]) + 1))
+    evaluated = evaluation_function(feature_subset, data)
 
-    start_time = time.time()
+    print(f"Running nearest neighbor with no features (default rate), using leaving-one-out evaluation, I get an accuracy of {str(evaluated)}\n\n") 
+
+
 
     if num_of_algo == '1':
-        forward_selection(myset, data)
+        forward_selection(feature_subset, data)
     elif num_of_algo == '2':
-        back_elimination(myset, data)
+        back_elimination(feature_subset, data)
     else:
         print("Code not implemented yet.")
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Search completed in {elapsed_time:.2f} seconds.")
+
 
 if __name__ == "__main__":
     main()
